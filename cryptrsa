@@ -1,0 +1,158 @@
+#!/usr/bin/python3.5
+#coding: utf-8
+import math, sys, time
+
+def banner():
+	print (" ____  ____    _         _    _     ____ ")
+	print ("|  _ \/ ___|  / \       / \  | |   / ___|")
+	print ("| |_) \___ \ / _ \     / _ \ | |  | |  _ ")
+	print ("|  _ < ___) / ___ \   / ___ \| |__| |_| |")
+	print ("|_| \_\____/_/   \_\ /_/   \_\_____\____|")
+	print()
+
+def ajuda():
+	banner();
+	print ("Executando:",sys.argv[0],"<options>");
+	print ("Opções:");
+	print ("\t-h || --help\t\tMenu de ajuda.");
+	print ("\t-t || --text\t\tTexto claro ou Encriptado.(Texto a ser encriptado/decriptado)");
+	print ("\t-p || --primary\t\tChave Pública/Privada ou Número Primo Base");
+	print ("\t-s || --secondary\tÍndice da Chave ou Número Primo Base");
+	print ("\t-d || --decrypt\t\tDecriptografar");
+	print ("\t-e || --encrypt\t\tEncriptar  ");
+	print ("Example Crypt:",sys.argv[0]," -t OLA -p 19 -s 23 -e  ");
+	print ("Example Decrypt:",sys.argv[0]," -t \"337 342 122\" -p 437 -s 61 -d");
+	exit()
+
+def numero_primo(numero):
+	tmp_fr, divs_fr,divisor = numero, 0,1;
+	while divisor <= tmp_fr:
+		if(tmp_fr % divisor) == 0:
+			divs_fr += 1
+			if divs_fr > 2:
+				break
+		divisor+=1
+	if divs_fr == 2:
+		return 0
+	return 1
+
+def fatorarns(numero):
+	divisores=[]
+	for y in range(2,numero):
+		while numero%y==0:
+			numero=numero/y
+			divisores.append(y)
+			if sum(divisores)==0:
+				divisores.append(numero)
+	ultimo = divisores[-1]
+	if numero_primo(ultimo) == 0:
+		ultimo += 1
+		while(numero_primo(ultimo) != 0):
+			ultimo+=1
+	else:
+		while(numero_primo(ultimo) != 0):
+			ultimo+=1
+	return ultimo
+
+def modulo(a,b):
+	restomod = a % b
+	if restomod < 0 and b > 0:
+		return (b + restomod)
+	elif restomod > 0 and b < 0:
+		return (b + restomod)
+	return (restomod)
+
+def euclidesext(a,b):
+    if b==0:
+        return [1,0,a]
+    else:
+        x,y,d=euclidesext(b, a%b)
+        return [y,x-(a//b)*y,d]
+contpar=0
+for argsvet in sys.argv:
+	if argsvet in ("-h","--help"):
+		ajuda()
+	elif len(sys.argv) < 6:
+		ajuda()
+	elif sys.argv[contpar] == "-p" and sys.argv[contpar+1] == "":
+		ajuda()
+	elif sys.argv[contpar] == "--primary" and sys.argv[contpar+1] == "":
+		ajuda()
+	elif sys.argv[contpar] == "-s" and sys.argv[contpar+1] == "":
+		ajuda()
+	elif sys.argv[contpar] == "--secondary" and sys.argv[contpar+1] == "":
+		ajuda()
+	elif sys.argv[contpar] == "-t" and sys.argv[contpar+1] == "":
+		ajuda()
+	elif sys.argv[contpar] == "--text" and sys.argv[contpar+1] == "":
+		ajuda()
+	contpar+=1
+
+banner()
+if "-e" in sys.argv or "--encrypt" in sys.argv:
+	for parametro in range(0,len(sys.argv)):
+		if sys.argv[parametro] == "-t" or sys.argv[parametro] == "--text":
+			texto = sys.argv[parametro + 1]
+		if sys.argv[parametro] == "-p" or sys.argv[parametro] == "--primary":
+			numP = int(sys.argv[parametro + 1])
+		if sys.argv[parametro] == "-s" or sys.argv[parametro] == "--secondary":
+			numS = int(sys.argv[parametro + 1])
+
+	if numero_primo(numP) != 0 or numero_primo(numS) != 0:
+		print("Por favor, execute com números primos...");
+		exit()
+
+	numero_primo(numP),numero_primo(numS)
+
+	indc = numP * numS
+	pub_key = fatorarns((numP-1)*(numS-1))
+	priv_key = euclidesext(pub_key,((numP-1)*(numS-1)))[0]
+
+	print("Chave Pública",indc,"||",pub_key)
+	print("Chave Privado",indc,"||",priv_key,"\tJamais publique essa chave")
+	print()
+	print("Mensagem:",texto)
+	print("Mensagem ASCII:", end = " ")
+	for letranum in texto:
+		ascii_letra = ord(letranum)
+		print(ascii_letra,end = " ")
+	print()
+	print("Mensagem criptografada:",end=" ")
+	for letra in texto:
+		intletra = (ord(letra)**pub_key)%indc
+		print(intletra,end = " ")
+
+elif "-d" in sys.argv or "--decrypt" in sys.argv:
+	texto = []
+	for parametro in range(0,len(sys.argv)):
+
+		if sys.argv[parametro] == "-t" or sys.argv[parametro] == "--text":
+			contador=0
+			argumentos = ["-p","--primary","-s","--secondary"
+						 "-d","--decrypt"," ",""]
+			for tamanho_texto in range(parametro,len(sys.argv)):
+				contador+=1
+				if sys.argv[tamanho_texto] in argumentos:
+					break
+			for letra_texto in range(parametro+1,tamanho_texto):
+				texto.insert(int(letra_texto),sys.argv[letra_texto])
+		if sys.argv[parametro] == "-p" or sys.argv[parametro] == "--primary":
+			indc = sys.argv[parametro + 1]
+
+		if sys.argv[parametro] == "-s" or sys.argv[parametro] == "--secondary":
+			key = sys.argv[parametro + 1]
+
+	print("Seu índice é:",indc)
+	print("Sua chave privada é:",key)
+	print("Texto Cifrado:",texto)
+
+	key =int(key)
+	indc=int(indc)
+	print("Sua Mensagem é:")
+	lista = texto[0].split(" ")
+	for decifrar in lista:
+		numero = int(decifrar)
+		numero = (numero**key)%indc
+		print(chr(numero),end="")
+
+print()
